@@ -1,6 +1,7 @@
 "use client"
 
 import { MacDesktop } from '@/components/MacDesktop'
+import { siteConfig } from '@/config/site'
 
 export default function Home() {
   return (
