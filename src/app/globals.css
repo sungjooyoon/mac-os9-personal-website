@@ -1,8 +1,68 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Chicago font declaration */
+@font-face {
+  font-family: 'Chicago';
+  src: url('/fonts/ChicagoKare-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Monaco font - authentic Mac OS Classic font */
+@font-face {
+  font-family: 'Monaco';
+  src: url('/fonts/Monaco.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+/* FindersKeepers font - authentic 9pt Geneva bitmap font from classic Mac OS */
+@font-face {
+  font-family: 'FindersKeepers';
+  src: url('/fonts/FindersKeepers.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+/* Geneva9 font for Mac OS body text */
+@font-face {
+  font-family: 'Geneva9';
+  src: url('/fonts/Geneva9_1.woff2') format('woff2'),
+       url('/fonts/Geneva9_1.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ChicagoFLF fallback */
+@font-face {
+  font-family: 'ChicagoFLF';
+  src: url('/fonts/ChicagoFLF.woff2') format('woff2'),
+       url('/fonts/ChicagoFLF.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --mac-background: #3366cc; /* Classic blue Mac OS 9 background */
+  --mac-window-border: #000000;
+  --mac-window-bg: #ffffff;
+  --mac-header-bg: #cccccc;
+  --mac-menu-bg: #dddddd;
+  --mac-shadow-color: rgba(0, 0, 0, 0.4);
+  --mac-highlight-color: rgba(255, 255, 255, 0.8);
+  --mac-font: 'Chicago', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --mac-body-font: 'Monaco', 'FindersKeepers', monospace;
 }
 
 @theme inline {
@@ -20,7 +80,832 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #3366cc;
+  color: #000000;
+  font-family: var(--mac-font);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
 }
+
+/* Update all text elements to use the Chicago font */
+.mac-window-title,
+.mac-folder-name,
+.mac-menu-item,
+.mac-apple-menu-item,
+.mac-dock-item span,
+.mac-status-bar,
+.items-info {
+  font-family: var(--mac-font);
+}
+
+/* Window styles */
+.mac-window {
+  background-color: var(--mac-window-bg);
+  border: 1px solid #000;
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  min-height: 100px;
+  resize: both;
+  max-width: 90vw;
+  max-height: 90vh;
+  box-shadow: 2px 2px 5px var(--mac-shadow-color);
+  position: absolute;
+}
+
+.mac-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid #fff;
+  border-right-color: #888;
+  border-bottom-color: #888;
+  pointer-events: none;
+}
+
+/* Window header with striped pattern */
+.mac-window-header {
+  /* Horizontal striped header background - classic Mac OS 9 look */
+  background: repeating-linear-gradient(
+    to bottom,
+    #dddddd,
+    #dddddd 2px,
+    #cccccc 2px,
+    #cccccc 4px
+  );
+  border-bottom: 1px solid #000;
+  display: flex;
+  justify-content: center;
+  padding: 1px 2px 1px 5px;
+  gap: 4px;
+  height: 20px;
+  flex-shrink: 0;
+  user-select: none;
+  width: 100%;
+  position: relative;
+}
+
+/* Active window header with Mac OS 9 striped pattern */
+.mac-window-header.active {
+  background: repeating-linear-gradient(
+    to bottom,
+    #9DB1CC,
+    #9DB1CC 2px,
+    #8CA3C2 2px,
+    #8CA3C2 4px
+  );
+  color: black;
+}
+
+/* Window title text with proper positioning */
+.mac-window-title {
+  font-family: var(--mac-font);
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  padding: 0 6px;
+  margin: 0 auto;
+  z-index: 1;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Create background for title text - only behind the text */
+.mac-window-title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #8CA3C2; /* Active state darker color */
+  z-index: -1;
+}
+
+/* Inactive window title background */
+.mac-window-header:not(.active) .mac-window-title::before {
+  background: #cccccc; /* Inactive state darker color */
+}
+
+.mac-button {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  flex-shrink: 0;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+  background: #fff;
+  cursor: pointer;
+}
+
+.mac-close {
+  position: relative;
+}
+
+.mac-close::before,
+.mac-close::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 1px;
+  background: #000;
+  top: 50%;
+  left: 50%;
+}
+
+.mac-close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.mac-close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.mac-close:active {
+  background: #ddd;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.mac-window-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f6eee3;
+  overflow: auto;
+  border-top: 1px solid #acacac;
+  width: calc(100% + 2px);
+  margin: 0;
+  margin-left: -1px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Menu bar text */
+.mac-menu-item, 
+.mac-apple-menu-item,
+.mac-menu-bar div {
+  font-family: var(--mac-font);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Dock labels */
+.mac-dock-item span {
+  font-family: var(--mac-font);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* Status bar */
+.mac-status-bar {
+  font-family: var(--mac-font);
+  border-top: 1px solid #aaa;
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 6px;
+  background: #ddd;
+  flex-shrink: 0;
+  height: 16px;
+}
+
+.items-info {
+  border-bottom: 1px solid #aaa;
+  padding: 2px 8px;
+  font-size: 10px;
+  background: #ddd;
+  flex-shrink: 0;
+}
+
+/* Folders and desktop items */
+.mac-folder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  margin: 4px;
+  text-decoration: none;
+}
+
+.mac-folder-name {
+  font-size: 13px;
+  color: #000;
+  text-align: center;
+  max-width: 100%;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: inline-block;
+}
+
+.mac-folder:hover .mac-folder-name {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.mac-folder-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mac-folder-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  background: linear-gradient(135deg, #f0f0f0, #d8d8d8);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.mac-folder-icon::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.mac-folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  padding: 8px;
+}
+
+/* Menu bar */
+.mac-menu-bar {
+  background: linear-gradient(to bottom, #eeeeee, #cccccc);
+  border-bottom: 1px solid #888;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1px 6px;
+  height: 20px;
+  flex-shrink: 0;
+  user-select: none;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 50;
+}
+
+.mac-menu-item {
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.mac-menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.mac-apple-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 1px 4px;
+  margin-right: 3px;
+  height: 100%;
+}
+
+/* Dock/Taskbar */
+.mac-dock {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  z-index: 1000;
+}
+
+.mac-dock-inner {
+  background: #d4d4d4;
+  border: 1px solid #000;
+  border-radius: 4px 0 0 4px;
+  box-shadow: 
+    inset 1px 1px 0 #fff, 
+    inset -1px -1px 0 #888, 
+    2px 2px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  padding: 4px 4px 4px 2px;
+  height: 34px;
+}
+
+.mac-dock-edge {
+  height: 100%;
+  width: 14px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mac-dock-edge-inner {
+  position: absolute;
+  height: 100%;
+  width: 28px;
+  border-radius: 4px;
+  background: #d4d4d4;
+  border: 1px solid #000;
+  box-shadow: 
+    inset 1px 1px 0 #fff, 
+    inset -1px -1px 0 #888, 
+    2px 2px 4px rgba(0, 0, 0, 0.3);
+  left: -14px;
+}
+
+.mac-dock-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  height: 100%;
+}
+
+.mac-dock-item-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 2px;
+  position: relative;
+  border-radius: 3px;
+  width: 42px;
+  box-shadow: 
+    inset 1px 1px 0 #fff, 
+    inset -1px -1px 0 #888;
+  background: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
+}
+
+.mac-dock-item-container:hover {
+  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+  box-shadow: 
+    inset 1px 1px 0 #fff,
+    inset -1px -1px 0 #aaa;
+}
+
+.mac-dock-divider {
+  width: 1px;
+  height: 80%;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0 1px;
+  align-self: center;
+}
+
+.mac-dock-icon {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-image {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  object-position: center;
+  background-color: transparent;
+  display: block;
+}
+
+.mac-dock-indicator {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  margin-left: 2px;
+  width: 12px;
+  min-width: 12px;
+}
+
+.mac-dock-arrow {
+  font-size: 8px;
+  color: #333;
+  margin-bottom: 0;
+  line-height: 1;
+  font-family: 'Chicago', monospace;
+  font-weight: bold;
+  margin-left: 1px;
+  display: inline-block;
+}
+
+.mac-icon-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  width: 100%;
+  height: 100%;
+}
+
+/* Finder icon */
+.mac-dock-icon.finder-icon {
+  background: transparent;
+}
+
+.mac-finder-face {
+  width: 28px;
+  height: 28px;
+  background-color: #3366cc;
+  border-radius: 5px;
+  position: relative;
+  border: 1px solid black;
+}
+
+.mac-finder-eyes {
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  width: 16px;
+  height: 6px;
+  background-color: black;
+  border-radius: 3px;
+}
+
+.mac-finder-eyes::before, .mac-finder-eyes::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  background-color: black;
+  border-radius: 50%;
+}
+
+.mac-finder-eyes::before {
+  left: 0;
+}
+
+.mac-finder-eyes::after {
+  right: 0;
+}
+
+.mac-finder-mouth {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 12px;
+  height: 6px;
+  background-color: white;
+  border-radius: 0 0 6px 6px;
+  border: 1px solid black;
+  border-top: none;
+}
+
+/* Browser icon */
+.mac-dock-icon.browser-icon {
+  background: linear-gradient(135deg, #88c5ff, #5290d8);
+}
+
+.mac-browser-globe {
+  width: 26px;
+  height: 26px;
+  background-color: #88c5ff;
+  border-radius: 50%;
+  position: relative;
+  border: 1px solid black;
+  overflow: hidden;
+}
+
+.mac-browser-meridian {
+  position: absolute;
+  top: 0;
+  left: 13px;
+  width: 1px;
+  height: 100%;
+  background-color: black;
+}
+
+.mac-browser-parallel {
+  position: absolute;
+  top: 13px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: black;
+}
+
+/* QuickTime icon */
+.mac-dock-icon.quicktime-icon {
+  background: linear-gradient(135deg, #b6c9e2, #9db1d0);
+}
+
+.mac-quicktime-logo {
+  width: 26px;
+  height: 26px;
+  background-color: #b6c9e2;
+  border-radius: 5px;
+  position: relative;
+  border: 1px solid black;
+}
+
+.mac-quicktime-q {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #333;
+  border-radius: 50%;
+}
+
+.mac-quicktime-q::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 8px;
+  height: 2px;
+  background-color: #333;
+  transform: rotate(-45deg);
+}
+
+/* Notes icon */
+.mac-dock-icon.notes-icon {
+  background: linear-gradient(135deg, #fff8c8, #faf0b0);
+}
+
+.mac-notes-paper {
+  width: 24px;
+  height: 30px;
+  background-color: white;
+  position: relative;
+  border: 1px solid black;
+}
+
+.mac-notes-lines {
+  position: absolute;
+  top: 6px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+}
+
+.mac-notes-lines::before, .mac-notes-lines::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background-color: #aaa;
+}
+
+.mac-notes-lines::before {
+  top: 5px;
+}
+
+.mac-notes-lines::after {
+  top: 12px;
+}
+
+/* Calculator icon */
+.mac-dock-icon.calculator-icon {
+  background: linear-gradient(135deg, #e0e0e0, #c8c8c8);
+}
+
+.mac-calculator-body {
+  width: 24px;
+  height: 30px;
+  background-color: #ddd;
+  border: 1px solid black;
+  position: relative;
+}
+
+.mac-calculator-display {
+  position: absolute;
+  top: 4px;
+  left: 3px;
+  width: 18px;
+  height: 6px;
+  background-color: #eeffdd;
+  border: 1px solid #666;
+}
+
+.mac-calculator-buttons {
+  position: absolute;
+  top: 13px;
+  left: 3px;
+  width: 18px;
+  height: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 4px);
+  grid-template-rows: repeat(4, 3px);
+  gap: 1px;
+}
+
+.mac-calculator-buttons::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to right,
+    #aaa,
+    #aaa 3px,
+    transparent 3px,
+    transparent 5px
+  ),
+  repeating-linear-gradient(
+    to bottom,
+    #aaa,
+    #aaa 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+/* About Computer icon */
+.mac-dock-icon.about-icon {
+  background: linear-gradient(135deg, #a8d0ff, #7ab0f0);
+}
+
+.mac-about-computer {
+  width: 28px;
+  height: 30px;
+  position: relative;
+}
+
+.mac-screen {
+  width: 22px;
+  height: 18px;
+  background-color: #eeffdd;
+  border: 1px solid black;
+  border-radius: 2px 2px 0 0;
+  position: absolute;
+  top: 0;
+  left: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mac-computer-body {
+  width: 28px;
+  height: 10px;
+  background-color: #bcbcbc;
+  border: 1px solid black;
+  border-radius: 0 0 3px 3px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.mac-happy-face {
+  width: 12px;
+  height: 12px;
+  position: relative;
+}
+
+.mac-happy-face::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 5px;
+  border: 1px solid black;
+  border-radius: 0 0 5px 5px;
+  border-top: none;
+  bottom: 2px;
+  left: 0;
+}
+
+.mac-happy-face::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  top: 3px;
+  left: 1px;
+}
+
+.mac-happy-face::after::before, .mac-happy-face::after::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background-color: black;
+  border-radius: 50%;
+}
+
+.mac-happy-face::after::before {
+  left: 0;
+}
+
+.mac-happy-face::after::after {
+  right: 0;
+}
+
+/* Additional Mac OS 9 icons */
+.mac-icon-finderface {
+  font-size: 18px;
+  color: #3366cc;
+}
+
+.mac-icon-document {
+  font-size: 10px;
+  position: relative;
+}
+
+.mac-icon-document::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 18px;
+  background: white;
+  border: 1px solid black;
+  top: -8px;
+  left: -7px;
+}
+
+.mac-icon-document::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-top: 1px solid black;
+  border-right: 1px solid black;
+  top: -8px;
+  right: -7px;
+  transform: rotate(45deg);
+}
+
+/* Calculator specific styles */
+.calculator-display {
+  background: #fff;
+  border: 1px inset #000;
+  padding: 2px 4px;
+  text-align: right;
+  margin: 4px;
+  font-family: Monaco, monospace;
+  font-size: 14px;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.calculator-button {
+  background: linear-gradient(to bottom, #f0f0f0, #d0d0d0);
+  border: 1px solid #777;
+  border-radius: 0;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  padding: 2px 4px;
+  font-size: 12px;
+  text-align: center;
+  min-width: 24px;
+  min-height: 20px;
+  user-select: none;
+}
+
+.calculator-button:active {
+  background: linear-gradient(to bottom, #d0d0d0, #c0c0c0);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Resize handle */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background-image: linear-gradient(135deg, transparent 0%, transparent 50%, #666 50%, #666 60%, transparent 60%);
+  background-size: 10px 10px;
+  background-position: right bottom;
+  background-repeat: no-repeat;
+  z-index: 20;
+}
+
+/* Mac OS 9 cream paper background */
+.mac-os9-paper {
+  background-color: #f6eee3;
+}
+
+.mac-os9-paper-hover:hover {
+  background-color: #efe6d9 !important;
+}
+
+/* Full window content area with paper background */
+.mac-window-content.mac-os9-paper {
+  background-color: #f6eee3;
+} 

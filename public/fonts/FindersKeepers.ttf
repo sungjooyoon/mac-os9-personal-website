@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>404 Not Found</title>
+<style>
+a:hover {color:#FF0000;}
+BODY{font-size:10pt;font-family:Verdana,Arial,Helvetica,sans-serif}
+TD{font-size:10pt;font-family:Verdana,Arial,Helvetica,sans-serif}
+.l{font-size:22pt;font-family:Verdana,Arial,Helvetica,sans-serif}
+.s{font-size:8pt;font-family:Verdana,Arial,Helvetica,sans-serif}
+.b{font-weight:bold;font-size:8pt;font-family:Verdana,Arial,Helvetica,sans-serif;border:1px solid #000000;}
+.t{font-size:8pt;font-family:Verdana,Arial,Helvetica,sans-serif;border:1px solid #000000;}
+</style>
+<script language="javascript"><!--begin hiding
+function Validate(theForm) {
+   var entry=theForm.MT.value.toLowerCase();
+   if (entry=="") {
+      alert("Please enter a keyword!");
+      theForm.MT.focus();
+      return false; }
+   return true; }
+//end hiding --></script>
+</head>
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#0000ff" onLoad="document.Search.MT.focus()">
+<form method="get" action="http://www.explorer.com/search.php" onSubmit="return Validate(this)" name="Search" target="_top">
+<input type="hidden" name="redir" value="Y">
+<input type="hidden" name="search" value="1">
+<b><font class="l">Not Found</font></b>
+<p>Sorry, the requested URL /finderskeepers.ttf was not found on this server.<br><br><br>
+<table border="0" cellpadding="2" cellspacing="0">
+<tr>
+   <td><input name="MT" size="18" class="t"></td>
+   <td><input type="submit" value="Search" class="b"></TD>
+</tr>
+</table>
+<p><br><hr>
+<address>Apache/1.3.27 Ben-SSL/1.48 Server at www.suppertime.co.uk Port 80</address>
+</form>
+</body>
+</html>
