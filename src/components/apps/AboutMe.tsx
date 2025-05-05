@@ -208,7 +208,7 @@ export function AboutMe({ id, name, position, zIndex }: AboutMeProps) {
             }}>
               <li className="mb-1">—virtue ethics as an ethical framework</li>
               <li className="mb-1">—(Old) K*nye, A$AP Rocky, the Strokes, and Mac DeMarco</li>
-              <li className="mb-1">—behavioral econ. (my post-career goal is to pursue a Social & Decision Neuroscience PhD at Caltech, which was the lab I worked at last summer)</li>
+              <li className="mb-1">—neuroeconomics (my post-career goal is to pursue a Social & Decision Neuroscience PhD at Caltech, which was the lab I worked at last summer)</li>
               <li className="mb-1">—photography (which was one of my two jobs before I dropped out)</li>
               <li className="mb-1">—Anthony Bourdain</li>
             </ul>
