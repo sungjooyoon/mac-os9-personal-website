@@ -9,14 +9,9 @@ const withMDX = require('@next/mdx')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-  output: 'export',
-  basePath: '',
   images: {
-    unoptimized: true,
+    domains: ['vercel.app'],
   },
-  // Skip the _not-found page during static export
-  skipTrailingSlashRedirect: true,
-  skipMiddlewareUrlNormalize: true,
 };
 
 module.exports = withMDX(nextConfig); 
