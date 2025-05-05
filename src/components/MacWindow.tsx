@@ -200,47 +200,6 @@ export function MacWindow({
     }
   };
 
-  // Fix the dragging functionality
-  useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        
-        // Calculate new position based on mouse position and offset
-        const newPosition = {
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
-        };
-        
-        // Ensure the window stays within the viewport bounds
-        const maxX = window.innerWidth - (windowSize.width / 2);
-        const maxY = window.innerHeight - (windowSize.height / 2);
-        
-        newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
-        newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
-        
-        setPosition(newPosition);
-      }
-    };
-    
-    const handleGlobalMouseUp = (e: MouseEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        setIsDragging(false);
-      }
-    };
-    
-    // Add global event listeners
-    document.addEventListener('mousemove', handleGlobalMouseMove);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    
-    // Clean up
-    return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove);
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-    };
-  }, [isDragging, dragOffset, windowSize]);
-
   // Handle mouse down for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     // Skip if clicking in the area where buttons are
@@ -248,31 +207,128 @@ export function MacWindow({
       return;
     }
     
-    // Only handle dragging from the header
-    if (!(e.target as HTMLElement).closest('.mac-window-header')) return;
+    // Focus the window
+    if (onFocus) onFocus();
+    
+    // Enable dragging
+    setIsDragging(true);
+    
+    // Calculate offset
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
     
     e.preventDefault();
-    e.stopPropagation();
-    setActive(true);
-    
-    // Calculate the offset from the mouse to the window's corner
-    const rect = windowRef.current?.getBoundingClientRect();
-    if (rect) {
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
-      
-      // Set isDragging after setting the offset to ensure the effect picks up correctly
-      setIsDragging(true);
-    }
-    
-    if (onFocus && id) {
-      bringToFront(id);
-      onFocus();
-    }
   };
-  
+
+  // Handle touch start for mobile dragging
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    
+    // Skip if touching in the area where buttons are
+    const touch = e.touches[0];
+    const target = e.target as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const offsetX = touch.clientX - rect.left;
+    const offsetY = touch.clientY - rect.top;
+    
+    if (offsetX < 70 && offsetY < 20) {
+      return;
+    }
+    
+    // Focus the window
+    if (onFocus) onFocus();
+    
+    // Enable dragging
+    setIsDragging(true);
+    
+    // Calculate offset
+    setDragOffset({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y
+    });
+    
+    // Prevent default behavior to avoid scrolling while dragging
+    e.preventDefault();
+  };
+
+  // Add touch move and touch end handlers, and mouse move and mouse up handlers
+  useEffect(() => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      
+      const touch = e.touches[0];
+      
+      // Calculate new position based on touch position and offset
+      const newPosition = {
+        x: touch.clientX - dragOffset.x,
+        y: touch.clientY - dragOffset.y
+      };
+      
+      // Ensure the window stays within the viewport bounds
+      const maxX = window.innerWidth - (windowSize.width / 2);
+      const maxY = window.innerHeight - (windowSize.height / 2);
+      
+      newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
+      newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
+      
+      setPosition(newPosition);
+      
+      // Prevent default behavior to avoid scrolling while dragging
+      e.preventDefault();
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isDragging) {
+        setIsDragging(false);
+        e.preventDefault();
+      }
+    };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      
+      // Calculate new position based on mouse position and offset
+      const newPosition = {
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y
+      };
+      
+      // Ensure the window stays within the viewport bounds
+      const maxX = window.innerWidth - (windowSize.width / 2);
+      const maxY = window.innerHeight - (windowSize.height / 2);
+      
+      newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
+      newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
+      
+      setPosition(newPosition);
+    };
+    
+    const handleMouseUp = (e: MouseEvent) => {
+      if (isDragging) {
+        e.preventDefault();
+        setIsDragging(false);
+      }
+    };
+    
+    // Add global touch and mouse event listeners
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset, windowSize]);
+
   const handleWindowClick = () => {
     setActive(true);
     if (onFocus && id) {
@@ -365,26 +421,40 @@ export function MacWindow({
   return (
     <div 
       ref={windowRef}
-      className="mac-window"
+      className={`mac-window ${isMinimized ? 'minimized' : ''}`}
       style={{
-        width: customStyles?.width || `${windowSize.width}px`,
-        height: customStyles?.height || `${windowSize.height}px`,
-        zIndex: isDragging || isResizing ? 10 : zIndex,
-        left: position.x,
-        top: position.y,
+        ...customStyles,
         position: 'absolute',
-        overflow: 'hidden',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: windowSize.width ? `${windowSize.width}px` : 'auto',
+        height: windowSize.height ? `${windowSize.height}px` : 'auto',
+        zIndex,
         display: isMinimized ? 'none' : 'flex',
-        ...(customStyles && { 
-          maxWidth: customStyles.maxWidth,
-          maxHeight: customStyles.maxHeight
-        })
+        opacity: active ? 1 : 0.8,
+        overflow: 'hidden',
       }}
       onClick={handleWindowClick}
     >
       <div 
-        className={`mac-window-header ${active ? 'active' : ''} cursor-move`} 
+        className="mac-window-header" 
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        style={{
+          backgroundColor: '#cccccc',
+          backgroundImage: 'linear-gradient(to bottom, #cccccc, #999999)',
+          border: '1px solid #888888',
+          borderBottom: 'none',
+          height: '20px',
+          width: '100%',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'move',
+          userSelect: 'none',
+          touchAction: 'none'
+        }}
       >
         <div 
           className="mac-window-title" 
