@@ -32,24 +32,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
   const [maxZIndex, setMaxZIndex] = useState(1);
   const [initialized, setInitialized] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Check if device is mobile
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const checkMobile = () => {
-        const mobile = window.innerWidth < 768;
-        setIsMobile(mobile);
-      };
-      
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      
-      return () => {
-        window.removeEventListener('resize', checkMobile);
-      };
-    }
-  }, []);
 
   // Set up a resize listener to adjust app positions when window size changes
   useEffect(() => {
@@ -71,25 +53,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Update app positions and sizes to ensure they stay in bounds and scaled appropriately
       setOpenApps(prevApps => {
         return prevApps.map(app => {
-          // If we're mobile, use fixed positioning
-          if (newWidth < 768) {
-            // For mobile, set fixed positions based on app type
-            let mobilePosition = getMobilePosition(app.type);
-            
-            // Use mobile size constraints
-            const newSize = {
-              width: Math.min(newWidth - 20, 600),
-              height: app.size ? Math.min(newHeight * 0.7, app.size.height) : Math.min(newHeight * 0.5, 400)
-            };
-            
-            return {
-              ...app,
-              position: mobilePosition,
-              size: newSize
-            };
-          }
-          
-          // Regular desktop positioning logic
           // Calculate new position based on scaling ratio
           const newPosition = { 
             x: Math.round(app.position.x * widthRatio),
@@ -149,28 +112,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [screenSize]);
 
-  // Helper function to get fixed mobile positions based on app type
-  const getMobilePosition = (appType: string): { x: number, y: number } => {
-    const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
-    
-    // Fixed positions for different app types on mobile
-    switch (appType) {
-      case 'aboutme':
-        return { x: 10, y: 50 };
-      case 'blog':
-        return { x: 10, y: 70 };
-      case 'terminal':
-        return { x: 10, y: 90 };
-      case 'photos':
-        return { x: 10, y: 110 };
-      case 'notes':
-        return { x: 10, y: 130 };
-      default:
-        // Default position for any other app type
-        return { x: 10, y: 150 };
-    }
-  };
-
   // Initialize default apps on first mount
   useEffect(() => {
     if (!initialized) {
@@ -180,46 +121,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Check if device is mobile (screen width less than 768px)
       const isMobile = screenWidth < 768;
       
-      // Define positions and sizes based on device type
-      let aboutMePosition, blogPosition, terminalPosition;
-      let aboutMeWidth, aboutMeHeight, blogWidth, terminalWidth, terminalHeight;
+      // Improved window positioning and sizing for better layout
+      // About Me: higher up, closer to top left, taller and skinnier
+      const aboutMePosition = { 
+        x: isMobile ? screenWidth * 0.02 : screenWidth * 0.03, // Closer to left edge on mobile
+        y: screenHeight * 0.05  // Higher up (5% of screen height)
+      };
       
-      if (isMobile) {
-        // Mobile positions - fixed positions from top
-        aboutMePosition = { x: 10, y: 50 };
-        blogPosition = { x: 10, y: 70 };
-        terminalPosition = { x: 10, y: 90 };
-        
-        // Mobile sizes - nearly full width and proportional height
-        aboutMeWidth = Math.round(screenWidth - 20);
-        aboutMeHeight = Math.round(screenHeight * 0.7);
-        blogWidth = Math.round(screenWidth - 20);
-        terminalWidth = Math.round(screenWidth - 20);
-        terminalHeight = Math.round(screenHeight * 0.4);
-      } else {
-        // Desktop positions - spaced out across the screen
-        aboutMePosition = { 
-          x: isMobile ? screenWidth * 0.02 : screenWidth * 0.03, // Closer to left edge on mobile
-          y: screenHeight * 0.05  // Higher up (5% of screen height)
-        };
-        
-        blogPosition = { 
-          x: screenWidth * 0.43, // 43% of screen width for more balanced spacing (slightly adjusted from 42%)
-          y: screenHeight * 0.05  // Same height as About Me
-        };
-        
-        terminalPosition = {
-          x: isMobile ? screenWidth * 0.02 : screenWidth * 0.50, // Slight adjustment to the left (from 0.55 to 0.50)
-          y: screenHeight * 0.54 // Adjusted position (54% of screen height)
-        };
-        
-        // Desktop sizes - proportional to screen
-        aboutMeWidth = isMobile ? Math.round(screenWidth * 0.96) : Math.round(screenWidth * 0.38);
-        aboutMeHeight = isMobile ? Math.round(screenHeight * 0.9) : Math.round(screenHeight * 0.78);
-        blogWidth = Math.round(screenWidth * 0.48); // 48% of screen width
-        terminalWidth = Math.min(600, Math.round(screenWidth * 0.47)); // Wider terminal (47% of screen width)
-        terminalHeight = Math.min(400, Math.round(screenHeight * 0.37)); // 37% of screen height (was 32%)
-      }
+      // Blog: positioned with equal spacing from About Me and right edge
+      const blogPosition = { 
+        x: screenWidth * 0.43, // 43% of screen width for more balanced spacing (slightly adjusted from 42%)
+        y: screenHeight * 0.05  // Same height as About Me
+      };
+      
+      // Terminal: positioned lower down and more to the right
+      const terminalPosition = {
+        x: isMobile ? screenWidth * 0.02 : screenWidth * 0.50, // Slight adjustment to the left (from 0.55 to 0.50)
+        y: screenHeight * 0.54 // Adjusted position (54% of screen height, was 56%)
+      };
+      
+      // Calculate sizes for the apps
+      let aboutMeWidth = isMobile ? Math.round(screenWidth * 0.96) : Math.round(screenWidth * 0.38);
+      let aboutMeHeight = isMobile ? Math.round(screenHeight * 0.9) : Math.round(screenHeight * 0.78);
+      const blogWidth = Math.round(screenWidth * 0.48); // 48% of screen width
+      const terminalWidth = Math.min(600, Math.round(screenWidth * 0.47)); // Wider terminal (47% of screen width)
+      const terminalHeight = Math.min(400, Math.round(screenHeight * 0.37)); // 37% of screen height (was 32%)
       
       // Open About Me by default on mobile, both About Me and Blog on desktop
       const newApps: OpenApp[] = [
@@ -237,7 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       ];
       
-      // Only add Blog app on desktop by default
+      // Only add Blog app on desktop
       if (!isMobile) {
         newApps.push({
           id: `blog_default`,
@@ -293,32 +219,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newMaxZIndex = maxZIndex + 1;
     setMaxZIndex(newMaxZIndex);
     
-    // For mobile devices, use fixed positioning
-    let position = app.position;
-    let size = app.size;
-    
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      // Use fixed mobile positions based on app type
-      position = getMobilePosition(app.type);
-      
-      // Set mobile-friendly size if not specified
-      if (!size) {
-        size = {
-          width: window.innerWidth - 20,
-          height: Math.min(400, window.innerHeight * 0.6)
-        };
-      }
-    }
-    
     setOpenApps([
       ...openApps,
-      { 
-        ...app, 
-        position,
-        size,
-        zIndex: newMaxZIndex, 
-        isMinimized: false 
-      }
+      { ...app, zIndex: newMaxZIndex, isMinimized: false }
     ]);
   };
 
