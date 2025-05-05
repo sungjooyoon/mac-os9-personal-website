@@ -216,57 +216,13 @@ export function MacWindow({
     }
   };
 
-  // Handle mouse/touch move for dragging
-  useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent | TouchEvent) => {
-      if (!isDragging) return;
-
-      e.preventDefault();
-      
-      // Get clientX and clientY regardless of event type
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      
-      // Calculate new position based on mouse/touch position and offset
-      const newPosition = {
-        x: clientX - dragOffset.x,
-        y: clientY - dragOffset.y
-      };
-      
-      // Ensure the window stays within the viewport bounds
-      const maxX = window.innerWidth - (windowSize.width / 2);
-      const maxY = window.innerHeight - (windowSize.height / 2);
-      
-      newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
-      newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
-      
-      setPosition(newPosition);
-    };
-    
-    const handleGlobalMouseUp = (e: MouseEvent | TouchEvent) => {
-      if (!isDragging) return;
-      
-      e.preventDefault();
-      setIsDragging(false);
-    };
-    
-    // Add event listeners for both mouse and touch events
-    document.addEventListener('mousemove', handleGlobalMouseMove as EventListener);
-    document.addEventListener('touchmove', handleGlobalMouseMove as EventListener, { passive: false });
-    document.addEventListener('mouseup', handleGlobalMouseUp as EventListener);
-    document.addEventListener('touchend', handleGlobalMouseUp as EventListener);
-    
-    // Clean up
-    return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove as EventListener);
-      document.removeEventListener('touchmove', handleGlobalMouseMove as EventListener);
-      document.removeEventListener('mouseup', handleGlobalMouseUp as EventListener);
-      document.removeEventListener('touchend', handleGlobalMouseUp as EventListener);
-    };
-  }, [isDragging, dragOffset, windowSize]);
-
   // Handle mouse/touch down for dragging
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    // Only handle dragging from the header
+    if (!(e.target as HTMLElement).closest('.mac-window-header')) {
+      return;
+    }
+    
     // Skip drag start if we're on mobile and this isn't coming from the window header
     if (isMobile && !(e.target as HTMLElement).closest('.mac-window-header')) {
       return;
@@ -296,8 +252,10 @@ export function MacWindow({
         y: clientY - rect.top
       });
       
-      // Set isDragging to enable the effect
-      setIsDragging(true);
+      // Set isDragging state immediately and in a more stable way
+      requestAnimationFrame(() => {
+        setIsDragging(true);
+      });
     }
     
     if (onFocus && id) {
@@ -305,7 +263,59 @@ export function MacWindow({
       onFocus();
     }
   };
-  
+
+  // Handle mouse/touch move for dragging
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+
+      e.preventDefault();
+      
+      // Get clientX and clientY regardless of event type
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      // Calculate new position based on mouse/touch position and offset
+      const newPosition = {
+        x: clientX - dragOffset.x,
+        y: clientY - dragOffset.y
+      };
+      
+      // Use requestAnimationFrame for smoother dragging
+      requestAnimationFrame(() => {
+        // Ensure the window stays within the viewport bounds
+        const maxX = window.innerWidth - (windowSize.width / 2);
+        const maxY = window.innerHeight - (windowSize.height / 2);
+        
+        newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
+        newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
+        
+        setPosition(newPosition);
+      });
+    };
+    
+    const handleGlobalMouseUp = (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      setIsDragging(false);
+    };
+    
+    // Add event listeners for both mouse and touch events
+    document.addEventListener('mousemove', handleGlobalMouseMove as EventListener);
+    document.addEventListener('touchmove', handleGlobalMouseMove as EventListener, { passive: false });
+    document.addEventListener('mouseup', handleGlobalMouseUp as EventListener);
+    document.addEventListener('touchend', handleGlobalMouseUp as EventListener);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove as EventListener);
+      document.removeEventListener('touchmove', handleGlobalMouseMove as EventListener);
+      document.removeEventListener('mouseup', handleGlobalMouseUp as EventListener);
+      document.removeEventListener('touchend', handleGlobalMouseUp as EventListener);
+    };
+  }, [isDragging, dragOffset, windowSize]);
+
   const handleWindowClick = () => {
     setActive(true);
     if (onFocus && id) {
@@ -432,6 +442,10 @@ export function MacWindow({
         ...(customStyles && { 
           maxWidth: customStyles.maxWidth,
           maxHeight: customStyles.maxHeight
+        }),
+        ...(isDragging && {
+          transition: 'none', // Disable transitions while dragging for smoother movement
+          userSelect: 'none'
         })
       }}
       onClick={handleWindowClick}
@@ -440,6 +454,7 @@ export function MacWindow({
         className={`mac-window-header ${active ? 'active' : ''} ${isMobile ? 'mobile-header' : ''} cursor-move`} 
         onMouseDown={handleMouseDown}
         onTouchStart={handleMouseDown as (e: React.TouchEvent) => void}
+        style={{ userSelect: 'none' }} // Prevent text selection in header
       >
         <div 
           className="mac-window-title" 

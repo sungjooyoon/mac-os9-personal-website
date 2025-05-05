@@ -116,6 +116,10 @@ body {
   max-height: 90vh;
   box-shadow: 2px 2px 5px var(--mac-shadow-color);
   position: absolute;
+  will-change: transform; /* Optimize for animations */
+  contain: layout; /* Improve rendering performance */
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden; /* Improve performance */
 }
 
 .mac-window::before {
@@ -151,6 +155,12 @@ body {
   user-select: none;
   width: 100%;
   position: relative;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mac-window-header:active {
+  cursor: grabbing;
 }
 
 /* Active window header with Mac OS 9 striped pattern */
