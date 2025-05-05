@@ -176,7 +176,7 @@ export function AboutMe({ id, name, position, zIndex }: AboutMeProps) {
               fontSmooth: 'never',
               letterSpacing: '-0.2px'
             }}>
-              Other hats I&apos;ve worn in the past: American national (2022) and world (2023) debate champion. Brief stints in competitive math. Previously a speechwriter to Dem. leadership in the U.S. House. Youngest journalist to ever write the New York Times&apos; headline op-ed, and a fmr. intern columnist at the Los Angeles Times. Dabbling here and there in white-hat hacking.
+              Other hats I&apos;ve worn in the past: American national (2022) and world (2023) debate champion. Brief stints in competitive math. Previously a speechwriter to Dem. leadership in the U.S. House. Youngest journalist to ever write the New York Times&apos; headline op-ed, and a fmr. intern columnist at the Los Angeles Times. Dabbling here and there in white-hat hacking. <strong>If you&apos;d like to learn more, please visit my LinkedIn and/or Github (accessible through the pear-icon drop-down in the top left corner).</strong>
             </p>
             
             <p className="mb-3" style={{ 
@@ -188,6 +188,30 @@ export function AboutMe({ id, name, position, zIndex }: AboutMeProps) {
             }}>
               For non-Biography related inquiries, please contact me at sungjooyoon@college.harvard.edu (both sungjoo.yoon@latimes.com and sungjoo.yoonca@mail.house.gov are now out of commission).
             </p>
+            
+            <p className="mb-2" style={{ 
+              fontFamily: 'Monaco, monospace', 
+              fontSize: '12.5px', 
+              WebkitFontSmoothing: 'none',
+              fontSmooth: 'never',
+              letterSpacing: '-0.2px'
+            }}>
+              Other things I&apos;m interested in:
+            </p>
+            
+            <ul className="list-none pl-4 mb-3" style={{ 
+              fontFamily: 'Monaco, monospace', 
+              fontSize: '12.5px', 
+              WebkitFontSmoothing: 'none',
+              fontSmooth: 'never',
+              letterSpacing: '-0.2px'
+            }}>
+              <li className="mb-1">—virtue ethics as an ethical framework</li>
+              <li className="mb-1">—(Old) K*nye, A$AP Rocky, the Strokes, and Mac DeMarco</li>
+              <li className="mb-1">—behavioral econ. (my post-career goal is to pursue a Social & Decision Neuroscience PhD at Caltech, which was the lab I worked at last summer)</li>
+              <li className="mb-1">—photography (which was one of my two jobs before I dropped out)</li>
+              <li className="mb-1">—Anthony Bourdain</li>
+            </ul>
           </div>
         </div>
       </MacWindow>

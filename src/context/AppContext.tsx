@@ -134,10 +134,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         y: screenHeight * 0.05  // Same height as About Me
       };
       
+      // Terminal: positioned lower down and more to the right
+      const terminalPosition = {
+        x: isMobile ? screenWidth * 0.02 : screenWidth * 0.50, // Slight adjustment to the left (from 0.55 to 0.50)
+        y: screenHeight * 0.54 // Adjusted position (54% of screen height, was 56%)
+      };
+      
       // Calculate sizes for the apps
       let aboutMeWidth = isMobile ? Math.round(screenWidth * 0.96) : Math.round(screenWidth * 0.38);
       let aboutMeHeight = isMobile ? Math.round(screenHeight * 0.9) : Math.round(screenHeight * 0.78);
       const blogWidth = Math.round(screenWidth * 0.48); // 48% of screen width
+      const terminalWidth = Math.min(600, Math.round(screenWidth * 0.47)); // Wider terminal (47% of screen width)
+      const terminalHeight = Math.min(400, Math.round(screenHeight * 0.37)); // 37% of screen height (was 32%)
       
       // Open About Me by default on mobile, both About Me and Blog on desktop
       const newApps: OpenApp[] = [
@@ -169,10 +177,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             height: Math.round(screenHeight * 0.70)
           }
         });
+        
+        // Add Terminal app on desktop, with higher z-index to be on top
+        newApps.push({
+          id: `terminal_default`,
+          name: 'Terminal',
+          type: 'terminal',
+          position: terminalPosition,
+          zIndex: 3,
+          isMinimized: false,
+          size: {
+            width: terminalWidth,
+            height: terminalHeight
+          }
+        });
       }
       
       setOpenApps(newApps);
-      setMaxZIndex(isMobile ? 1 : 2);
+      setMaxZIndex(isMobile ? 1 : 3); // Update max z-index to account for Terminal
       setInitialized(true);
     }
   }, [initialized]);

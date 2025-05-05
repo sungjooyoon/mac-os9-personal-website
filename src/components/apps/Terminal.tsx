@@ -12,7 +12,7 @@ interface TerminalProps {
 }
 
 export function Terminal({ id, name, position, zIndex }: TerminalProps) {
-  const { bringToFront, minimizeApp } = useAppContext();
+  const { bringToFront, minimizeApp, openApps } = useAppContext();
   const [windowSize, setWindowSize] = useState({ width: 600, height: 400 });
   const [loggedIn, setLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
@@ -36,19 +36,42 @@ export function Terminal({ id, name, position, zIndex }: TerminalProps) {
   const historyRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    const calculateSize = () => {
-      const width = Math.min(600, window.innerWidth - 120);
-      const height = Math.min(400, window.innerHeight - 150);
-      setWindowSize({ width, height });
-    };
+    // Find this specific app in openApps to get its size
+    const thisApp = openApps.find(app => app.id === id);
+    if (thisApp?.size) {
+      setWindowSize(thisApp.size);
+    } else {
+      // Use a wider fallback size
+      const calculateSize = () => {
+        const maxWidth = Math.min(600, window.innerWidth * 0.47);
+        const maxHeight = Math.min(400, window.innerHeight * 0.37);
+        setWindowSize({ 
+          width: Math.round(maxWidth), 
+          height: Math.round(maxHeight) 
+        });
+      };
+      
+      calculateSize();
+    }
     
-    calculateSize();
-    window.addEventListener('resize', calculateSize);
+    window.addEventListener('resize', handleResize);
     
     return () => {
-      window.removeEventListener('resize', calculateSize);
+      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [id, openApps]);
+  
+  const handleResize = () => {
+    // Only recalculate if no explicit size is set
+    if (!openApps.find(app => app.id === id)?.size) {
+      const maxWidth = Math.min(600, window.innerWidth * 0.47);
+      const maxHeight = Math.min(400, window.innerHeight * 0.37);
+      setWindowSize({ 
+        width: Math.round(maxWidth), 
+        height: Math.round(maxHeight) 
+      });
+    }
+  };
   
   useEffect(() => {
     // Scroll to bottom of terminal when history changes
