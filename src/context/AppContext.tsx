@@ -141,7 +141,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
       
       // Calculate sizes for the apps
-      let aboutMeWidth = isMobile ? Math.round(screenWidth * 0.98) : Math.round(screenWidth * 0.38);
+      let aboutMeWidth = isMobile ? Math.round(screenWidth * 0.96) : Math.round(screenWidth * 0.38);
       let aboutMeHeight = isMobile ? Math.round(screenHeight * 0.9) : Math.round(screenHeight * 0.78);
       const blogWidth = Math.round(screenWidth * 0.48); // 48% of screen width
       const terminalWidth = Math.min(600, Math.round(screenWidth * 0.47)); // Wider terminal (47% of screen width)
