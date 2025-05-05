@@ -45,6 +45,7 @@ export function MacWindow({
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
   const [initialSize, setInitialSize] = useState({ width: 0, height: 0 });
   const [active, setActive] = useState(isActive);
+  const [isMobile, setIsMobile] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLDivElement>(null);
   const minimizeButtonRef = useRef<HTMLDivElement>(null);
@@ -54,6 +55,21 @@ export function MacWindow({
   // Find the current app to check if it's minimized and get any custom size
   const currentApp = id ? openApps.find(app => app.id === id) : undefined;
   const isMinimized = currentApp?.isMinimized || false;
+  
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobileDevice = window.innerWidth < 768;
+      setIsMobile(isMobileDevice);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   // Initialize the window size on mount
   useEffect(() => {
@@ -200,133 +216,94 @@ export function MacWindow({
     }
   };
 
-  // Fix the dragging functionality
+  // Handle mouse/touch move for dragging
   useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        
-        // Calculate new position based on mouse position and offset
-        const newPosition = {
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
-        };
-        
-        // Ensure the window stays within the viewport bounds
-        const maxX = window.innerWidth - (windowSize.width / 2);
-        const maxY = window.innerHeight - (windowSize.height / 2);
-        
-        newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
-        newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
-        
-        setPosition(newPosition);
-      }
+    const handleGlobalMouseMove = (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+
+      e.preventDefault();
+      
+      // Get clientX and clientY regardless of event type
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      // Calculate new position based on mouse/touch position and offset
+      const newPosition = {
+        x: clientX - dragOffset.x,
+        y: clientY - dragOffset.y
+      };
+      
+      // Ensure the window stays within the viewport bounds
+      const maxX = window.innerWidth - (windowSize.width / 2);
+      const maxY = window.innerHeight - (windowSize.height / 2);
+      
+      newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
+      newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
+      
+      setPosition(newPosition);
     };
     
-    const handleGlobalMouseUp = (e: MouseEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        setIsDragging(false);
-      }
+    const handleGlobalMouseUp = (e: MouseEvent | TouchEvent) => {
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      setIsDragging(false);
     };
     
-    // Touch event handlers for mobile
-    const handleGlobalTouchMove = (e: TouchEvent) => {
-      if (isDragging && e.touches.length > 0) {
-        e.preventDefault();
-        
-        const touch = e.touches[0];
-        
-        // Calculate new position based on touch position and offset
-        const newPosition = {
-          x: touch.clientX - dragOffset.x,
-          y: touch.clientY - dragOffset.y
-        };
-        
-        // Ensure the window stays within the viewport bounds
-        const maxX = window.innerWidth - (windowSize.width / 2);
-        const maxY = window.innerHeight - (windowSize.height / 2);
-        
-        newPosition.x = Math.max(-(windowSize.width / 2), Math.min(newPosition.x, maxX));
-        newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
-        
-        setPosition(newPosition);
-      }
-    };
-    
-    const handleGlobalTouchEnd = (e: TouchEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        setIsDragging(false);
-      }
-    };
-    
-    // Add global event listeners
-    document.addEventListener('mousemove', handleGlobalMouseMove);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
-    document.addEventListener('touchend', handleGlobalTouchEnd);
-    document.addEventListener('touchcancel', handleGlobalTouchEnd);
+    // Add event listeners for both mouse and touch events
+    document.addEventListener('mousemove', handleGlobalMouseMove as EventListener);
+    document.addEventListener('touchmove', handleGlobalMouseMove as EventListener, { passive: false });
+    document.addEventListener('mouseup', handleGlobalMouseUp as EventListener);
+    document.addEventListener('touchend', handleGlobalMouseUp as EventListener);
     
     // Clean up
     return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove);
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-      document.removeEventListener('touchmove', handleGlobalTouchMove);
-      document.removeEventListener('touchend', handleGlobalTouchEnd);
-      document.removeEventListener('touchcancel', handleGlobalTouchEnd);
+      document.removeEventListener('mousemove', handleGlobalMouseMove as EventListener);
+      document.removeEventListener('touchmove', handleGlobalMouseMove as EventListener);
+      document.removeEventListener('mouseup', handleGlobalMouseUp as EventListener);
+      document.removeEventListener('touchend', handleGlobalMouseUp as EventListener);
     };
   }, [isDragging, dragOffset, windowSize]);
 
-  // Handle mouse down for dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Handle mouse/touch down for dragging
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    // Skip drag start if we're on mobile and this isn't coming from the window header
+    if (isMobile && !(e.target as HTMLElement).closest('.mac-window-header')) {
+      return;
+    }
+    
     // Skip if clicking in the area where buttons are
-    if (e.nativeEvent.offsetX < 70 && e.nativeEvent.offsetY < 20) {
-      return;
+    if ('nativeEvent' in e && 'offsetX' in e.nativeEvent) {
+      if (e.nativeEvent.offsetX < 70 && e.nativeEvent.offsetY < 20) {
+        return;
+      }
     }
     
-    if (onFocus) {
+    // Prevent default to avoid text selection during drag
+    e.preventDefault();
+    e.stopPropagation();
+    setActive(true);
+    
+    // Get clientX and clientY regardless of event type
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    // Calculate the offset from the mouse to the window's corner
+    const rect = windowRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      });
+      
+      // Set isDragging to enable the effect
+      setIsDragging(true);
+    }
+    
+    if (onFocus && id) {
+      bringToFront(id);
       onFocus();
     }
-    
-    setActive(true);
-    setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
-    
-    e.preventDefault();
-  };
-  
-  // Handle touch start for dragging on mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 0) return;
-    
-    const touch = e.touches[0];
-    // Get the position within the header element
-    const headerElement = e.currentTarget;
-    const rect = headerElement.getBoundingClientRect();
-    const offsetX = touch.clientX - rect.left;
-    
-    // Skip if touching in the area where buttons are
-    if (offsetX < 70) {
-      return;
-    }
-    
-    if (onFocus) {
-      onFocus();
-    }
-    
-    setActive(true);
-    setIsDragging(true);
-    setDragOffset({
-      x: touch.clientX - position.x,
-      y: touch.clientY - position.y
-    });
-    
-    // Prevent default behavior like scrolling
-    e.preventDefault();
   };
   
   const handleWindowClick = () => {
@@ -338,7 +315,10 @@ export function MacWindow({
   };
 
   // Handle resize start
-  const handleResizeStart = (e: React.MouseEvent) => {
+  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
+    // Don't allow resizing on mobile
+    if (isMobile) return;
+    
     e.stopPropagation();
     e.preventDefault();
     
@@ -349,61 +329,34 @@ export function MacWindow({
     }
     
     setIsResizing(true);
-    setInitialMousePos({ x: e.clientX, y: e.clientY });
+    
+    // Get clientX and clientY regardless of event type
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    setInitialMousePos({ x: clientX, y: clientY });
     setInitialSize({ width: windowSize.width, height: windowSize.height });
     
     // Add resize event listeners
-    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mousemove', handleResizeMove as EventListener);
+    document.addEventListener('touchmove', handleResizeMove as EventListener, { passive: false });
     document.addEventListener('mouseup', handleResizeEnd);
-  };
-  
-  // Handle touch resize start for mobile
-  const handleTouchResizeStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 0) return;
-    
-    e.stopPropagation();
-    e.preventDefault();
-    
-    setActive(true);
-    if (onFocus && id) {
-      bringToFront(id);
-      onFocus();
-    }
-    
-    const touch = e.touches[0];
-    
-    setIsResizing(true);
-    setInitialMousePos({ x: touch.clientX, y: touch.clientY });
-    setInitialSize({ width: windowSize.width, height: windowSize.height });
-    
-    // Add touch resize event listeners
-    document.addEventListener('touchmove', handleTouchResizeMove, { passive: false });
     document.addEventListener('touchend', handleResizeEnd);
-    document.addEventListener('touchcancel', handleResizeEnd);
   };
 
   // Handle resize movement
-  const handleResizeMove = (e: MouseEvent) => {
+  const handleResizeMove = (e: MouseEvent | TouchEvent) => {
     if (!isResizing) return;
     
-    const deltaX = e.clientX - initialMousePos.x;
-    const deltaY = e.clientY - initialMousePos.y;
+    // Prevent default to avoid scrolling during resize
+    e.preventDefault();
     
-    const newWidth = Math.max(minWidth, initialSize.width + deltaX);
-    const newHeight = Math.max(minHeight, initialSize.height + deltaY);
+    // Get clientX and clientY regardless of event type
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     
-    setWindowSize({ width: newWidth, height: newHeight });
-  };
-  
-  // Handle touch resize movement for mobile
-  const handleTouchResizeMove = (e: TouchEvent) => {
-    if (!isResizing || e.touches.length === 0) return;
-    
-    e.preventDefault(); // Prevent scrolling during resizing
-    
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - initialMousePos.x;
-    const deltaY = touch.clientY - initialMousePos.y;
+    const deltaX = clientX - initialMousePos.x;
+    const deltaY = clientY - initialMousePos.y;
     
     const newWidth = Math.max(minWidth, initialSize.width + deltaX);
     const newHeight = Math.max(minHeight, initialSize.height + deltaY);
@@ -416,21 +369,19 @@ export function MacWindow({
     setIsResizing(false);
     
     // Remove resize event listeners
-    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mousemove', handleResizeMove as EventListener);
+    document.removeEventListener('touchmove', handleResizeMove as EventListener);
     document.removeEventListener('mouseup', handleResizeEnd);
-    document.removeEventListener('touchmove', handleTouchResizeMove);
     document.removeEventListener('touchend', handleResizeEnd);
-    document.removeEventListener('touchcancel', handleResizeEnd);
   };
   
   // Clean up resize listeners on unmount
   useEffect(() => {
     return () => {
-      document.removeEventListener('mousemove', handleResizeMove);
+      document.removeEventListener('mousemove', handleResizeMove as EventListener);
+      document.removeEventListener('touchmove', handleResizeMove as EventListener);
       document.removeEventListener('mouseup', handleResizeEnd);
-      document.removeEventListener('touchmove', handleTouchResizeMove);
       document.removeEventListener('touchend', handleResizeEnd);
-      document.removeEventListener('touchcancel', handleResizeEnd);
     };
   }, [isResizing]);
   
@@ -486,9 +437,9 @@ export function MacWindow({
       onClick={handleWindowClick}
     >
       <div 
-        className={`mac-window-header ${active ? 'active' : ''} cursor-move`} 
+        className={`mac-window-header ${active ? 'active' : ''} ${isMobile ? 'mobile-header' : ''} cursor-move`} 
         onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        onTouchStart={handleMouseDown as (e: React.TouchEvent) => void}
       >
         <div 
           className="mac-window-title" 
@@ -529,19 +480,22 @@ export function MacWindow({
         </div>
       )}
   
-      <div 
-        className="resize-handle"
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          right: 0,
-          width: '15px',
-          height: '15px',
-          cursor: 'nwse-resize'
-        }}
-        onMouseDown={handleResizeStart}
-        onTouchStart={handleTouchResizeStart}
-      />
+      {/* Only show resize handle if not on mobile */}
+      {!isMobile && (
+        <div 
+          className="resize-handle"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: '15px',
+            height: '15px',
+            cursor: 'nwse-resize'
+          }}
+          onMouseDown={handleResizeStart}
+          onTouchStart={handleResizeStart as (e: React.TouchEvent) => void}
+        />
+      )}
     </div>
   );
 } 
