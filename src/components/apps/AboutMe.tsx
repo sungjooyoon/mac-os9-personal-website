@@ -155,7 +155,7 @@ export function AboutMe({ id, name, position, zIndex }: AboutMeProps) {
               letterSpacing: '-0.2px'
             }}>
               <span style={{ display: 'inline-block', textIndent: '0px' }}>
-                <strong>Currently on voluntary leave from Harvard to build Biography as our founding CEO.</strong> Most recently, we raised an oversubscribed pre-seed round with ~$1.1m in investment offers. Reach out to sungjoo@biography.industries with related inquiries.
+                <strong>Currently on voluntary leave from Harvard to build Biography as our founding CEO.</strong> Most recently, we raised our ~3x oversubscribed $5.5M seed round. Reach out to sungjoo@biography.industries with related inquiries.
               </span>
             </p>
             
